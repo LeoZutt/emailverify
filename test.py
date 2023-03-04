@@ -1,6 +1,4 @@
-import streamlit as st
 import quickemailverification
-
 from unidecode import unidecode
 import tldextract
 
@@ -31,68 +29,61 @@ def checkEmail(emails):
 
     for email in emails:
         response = quickemailverification.verify(email)
-
+        print(response.body)
         status = response.body["safe_to_send"]
         acceptAll = response.body["accept_all"]
 
         print(status)
         if status == "true":
-            st.write("Email found")
-            st.write(email)
+            print("Email found")
+            print(email)
             break
         if acceptAll == "true":
-            st.write("Accept All")
-            st.write(emails[0])
+            print("Accept All")
+            print(emails[0])
             break
 
-    #st.write('Nothing Found... Sorry :(')
 
+firstName = "leonhard"
+lastName = "Ruegg"
+domain = "zutt.ch"
 
-st.write("""
-## Email Verifier 
-""")
+domain = tldextract.extract(domain)
+domain = domain.domain + "." + domain.suffix
 
-firstName = st.text_input("First Name: ")
-lastName = st.text_input("Last Name: ")
-domain = st.text_input("Domain: ")
+firstName = firstName.lower()
+lastName = lastName.lower()
 
-quickMode = st.checkbox("Quickmode", value=True)
+umlautMode = False
+umlaute = ['ä','ü','ö']
 
-if st.button("Sumbit"):
+for umlaut in umlaute:
+    if umlaut in firstName:
+        umlautMode = True
+    if umlaut in lastName:
+        umlautMode = True
 
-    domain = tldextract.extract(domain)
-    domain = domain.domain + "." + domain.suffix
+emails = emailFormats(unidecode(firstName), unidecode(lastName), domain)
 
-    firstName = firstName.lower()
-    lastName = lastName.lower()
+quickMode = True
 
-    umlautMode = False
-    umlaute = ['ä', 'ü', 'ö']
+if quickMode == True:
+    emails = emails[0:4]
 
-    for umlaut in umlaute:
-        if umlaut in firstName:
-            umlautMode = True
-        if umlaut in lastName:
-            umlautMode = True
+print(emails)
 
-    emails = emailFormats(unidecode(firstName), unidecode(lastName), domain)
-
+if umlautMode == True:
+    vowel_char_map = {ord('ä'): 'ae', ord('ü'): 'ue', ord('ö'): 'oe'}
+    firstName = firstName.translate(vowel_char_map)
+    lastName = lastName.translate(vowel_char_map)
+    print(lastName)
+    firstName = unidecode(firstName)
+    lastName = unidecode(lastName)
+    umlautmails = emailFormats(firstName, lastName, domain)
     if quickMode == True:
-        emails = emails[0:4]
+        umlautmails = umlautmails[0:4]
+    emails.extend(umlautmails)
+    umlautMode = False
 
-    if umlautMode == True:
-        vowel_char_map = {ord('ä'): 'ae', ord('ü'): 'ue', ord('ö'): 'oe'}
-        firstName = firstName.translate(vowel_char_map)
-        lastName = lastName.translate(vowel_char_map)
-        print(lastName)
-        firstName = unidecode(firstName)
-        lastName = unidecode(lastName)
-        umlautmails = emailFormats(firstName, lastName, domain)
-        if quickMode == True:
-            umlautmails = umlautmails[0:4]
-        emails.extend(umlautmails)
-        umlautMode = False
-
-    checkEmail(emails)
-
-
+print(emails)
+checkEmail(emails)

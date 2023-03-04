@@ -1,3 +1,6 @@
+# pip freeze > requirements.txt
+
+
 import streamlit as st
 import quickemailverification
 

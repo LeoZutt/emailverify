@@ -34,14 +34,17 @@ def EmailVerify(emails, domain):
     mxRecord = records[0].exchange
     mxRecord = str(mxRecord)
 
+    # This email will be used to "send" an email to the server
     fromAddress = 'just_a_place_holder@domain.com'
 
+    # This email address will be used to check if the server is accept all
+    # If this obviously invalid email is accepted, the server is accept all
     acceptall = "invalid.email.9238381" + "@" + domain
 
+    # Connect to the server and verify the email address
     server = smtplib.SMTP()
-
     server.connect(mxRecord)
-    server.helo(server.local_hostname)  ### server.local_hostname(Get local server hostname)
+    server.helo(server.local_hostname)
     server.mail(fromAddress)
     code, message = server.rcpt(str(acceptall))
 
@@ -65,7 +68,7 @@ def EmailVerify(emails, domain):
         server.quit()
         return emails[0], newmessage, str(message)
 
-
+# Set the interface of the webapp
 st.write("""## Email Verifier """)
 
 col1, col2, col3 = st.columns(3)
@@ -77,11 +80,14 @@ with col2:
 with col3:
     domain = st.text_input("Domain: ")
 
+# Set the button and start all the functions when clicked
 if st.button("Sumbit"):
 
+    # Extract the domain from webaddress
     domain = tldextract.extract(domain)
     domain = domain.domain + "." + domain.suffix
 
+    # Split first and lastName if both habe been copied into firstName field
     if " " in firstName:
         namesplit = firstName.split()
         firstName = namesplit[0]
@@ -90,6 +96,8 @@ if st.button("Sumbit"):
     firstName = firstName.lower()
     lastName = lastName.lower()
 
+    # If a mail address is copied into the firstName field, verify this address
+    # If not, generate the different email formats and verify those
     if "@" in firstName:
         emails = [firstName]
         domain = tldextract.extract(firstName)
@@ -97,15 +105,17 @@ if st.button("Sumbit"):
     else:
         emails = emailFormats(unidecode(firstName), unidecode(lastName), domain)
 
+    # Check for Umlaute
     umlautMode = False
     umlaute = ['ä', 'ü', 'ö']
+    umlautName = firstName + lastName
 
     for umlaut in umlaute:
-        if umlaut in firstName:
-            umlautMode = True
-        if umlaut in lastName:
+        if umlaut in umlautName:
             umlautMode = True
 
+    # If and Umlaut is detected, both email format variants are generated and verified
+    # Eg. leonhard.ruegg@zutt.ch and also leonhard.rueegg@zutt.ch and so forth
     if umlautMode == True:
         vowel_char_map = {ord('ä'): 'ae', ord('ü'): 'ue', ord('ö'): 'oe'}
         firstName = firstName.translate(vowel_char_map)
@@ -113,12 +123,12 @@ if st.button("Sumbit"):
         firstName = unidecode(firstName)
         lastName = unidecode(lastName)
         umlautmails = emailFormats(firstName, lastName, domain)
-        if quickMode == True:
-            umlautmails = umlautmails[0:4]
         emails.extend(umlautmails)
         umlautMode = False
 
+    # Verify the emails
     email, message, help = EmailVerify(emails, domain)
 
+    # Display the valid email
     with st.container():
         st.metric(label="", value=email, delta=message, help=help)

@@ -61,9 +61,9 @@ def EmailVerify(emails, domain):
             return email, "Valid Email", str(message)
 
     if emailfound == False:
-        message = "- No Valid Email Found -"
+        newmessage = "- No Valid Email Found -"
         server.quit()
-        return emails[0], str(message), "Try without Quickmode"
+        return emails[0], newmessage, str(message)
 
 
 st.write("""

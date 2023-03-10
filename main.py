@@ -7,6 +7,9 @@ import tldextract
 
 def emailFormats(firstName, lastName, domain):
 
+    # This function combines the firstName, lastName and the domain
+    # to all common email formats
+
     emails = [
         firstName + "." + lastName + "@" + domain,      #max.muster@muster.ch
         firstName[0] + '.' + lastName + '@' + domain,   #m.muster@muster.ch
@@ -74,8 +77,6 @@ with col2:
 with col3:
     domain = st.text_input("Domain: ")
 
-quickMode = st.checkbox("Quickmode", value=True)
-
 if st.button("Sumbit"):
 
     domain = tldextract.extract(domain)
@@ -95,9 +96,6 @@ if st.button("Sumbit"):
         domain = domain.domain + "." + domain.suffix
     else:
         emails = emailFormats(unidecode(firstName), unidecode(lastName), domain)
-
-    if quickMode == True:
-        emails = emails[0:4]
 
     umlautMode = False
     umlaute = ['ä', 'ü', 'ö']

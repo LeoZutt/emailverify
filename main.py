@@ -1,19 +1,16 @@
 # pip freeze > requirements.txt
-
-
 import streamlit as st
-import quickemailverification
 
+import smtplib
+import dns.resolver
 from unidecode import unidecode
 import tldextract
 
-client = quickemailverification.Client('53661396b1fc058ab009ef3da01ee6edd06d9cfc33ed9685baf446c5ef9b')
-quickemailverification = client.quickemailverification()
-
 def emailFormats(firstName, lastName, domain):
 
-    emails = [
+    print(lastName)
 
+    emails = [
         firstName + "." + lastName + "@" + domain,      #max.muster@muster.ch
         firstName[0] + '.' + lastName + '@' + domain,   #m.muster@muster.ch
         firstName + "_" + lastName + "@" + domain,      #max_muster@muster.ch
@@ -30,44 +27,84 @@ def emailFormats(firstName, lastName, domain):
 
     return emails
 
-def checkEmail(emails):
+def EmailVerify(emails, domain):
+
+    # MX record lookup
+    records = dns.resolver.resolve(domain, 'MX')
+    mxRecord = records[0].exchange
+    mxRecord = str(mxRecord)
+
+    fromAddress = 'just_a_place_holder@domain.com'
+
+    acceptall = "invalid.email.9238381" + "@" + domain
+
+    server = smtplib.SMTP()
+
+    server.connect(mxRecord)
+    server.helo(server.local_hostname)  ### server.local_hostname(Get local server hostname)
+    server.mail(fromAddress)
+    code, message = server.rcpt(str(acceptall))
+    print(code)
+    emailfound = False
+
+    if code == 250:
+        emailfound = True
+        message = "- Accept All - "
+        server.quit()
+        return emails[0], str(message), None
 
     for email in emails:
-        response = quickemailverification.verify(email)
+        code, message = server.rcpt(str(email))
+        if code == 250:
+            emailfound = True
+            server.quit()
+            return email, "Valid Email", str(message)
 
-        status = response.body["safe_to_send"]
-        acceptAll = response.body["accept_all"]
-
-        print(status)
-        if status == "true":
-            st.write("Email found")
-            st.write(email)
-            break
-        if acceptAll == "true":
-            st.write("Accept All")
-            st.write(emails[0])
-            break
-
-    #st.write('Nothing Found... Sorry :(')
+    if emailfound == False:
+        message = "- No Valid Email Found -"
+        server.quit()
+        return emails[0], str(message), "Try without Quickmode"
 
 
 st.write("""
 ## Email Verifier 
 """)
 
-firstName = st.text_input("First Name: ")
-lastName = st.text_input("Last Name: ")
-domain = st.text_input("Domain: ")
+col1, col2, col3 = st.columns(3)
+with col1:
+    firstName = st.text_input("First Name: ",
+                              help="Also accepts Email-Adress or First- and Lastname with space in between")
+with col2:
+    lastName = st.text_input(label="Last Name: ")
+with col3:
+    domain = st.text_input("Domain: ")
 
 quickMode = st.checkbox("Quickmode", value=True)
+
+placeholder = st.empty()
 
 if st.button("Sumbit"):
 
     domain = tldextract.extract(domain)
     domain = domain.domain + "." + domain.suffix
 
+    if " " in firstName:
+        namesplit = firstName.split()
+        firstName = namesplit[0]
+        lastName = namesplit[1]
+
     firstName = firstName.lower()
     lastName = lastName.lower()
+
+    if "@" in firstName:
+        emails = [firstName]
+        domain = tldextract.extract(firstName)
+        domain = domain.domain + "." + domain.suffix
+    else:
+        emails = emailFormats(unidecode(firstName), unidecode(lastName), domain)
+
+    if quickMode == True:
+        emails = emails[0:4]
 
     umlautMode = False
     umlaute = ['ä', 'ü', 'ö']
@@ -78,16 +115,10 @@ if st.button("Sumbit"):
         if umlaut in lastName:
             umlautMode = True
 
-    emails = emailFormats(unidecode(firstName), unidecode(lastName), domain)
-
-    if quickMode == True:
-        emails = emails[0:4]
-
     if umlautMode == True:
         vowel_char_map = {ord('ä'): 'ae', ord('ü'): 'ue', ord('ö'): 'oe'}
         firstName = firstName.translate(vowel_char_map)
         lastName = lastName.translate(vowel_char_map)
-        print(lastName)
         firstName = unidecode(firstName)
         lastName = unidecode(lastName)
         umlautmails = emailFormats(firstName, lastName, domain)
@@ -96,6 +127,8 @@ if st.button("Sumbit"):
         emails.extend(umlautmails)
         umlautMode = False
 
-    checkEmail(emails)
+    email, message, help = EmailVerify(emails, domain)
+    with placeholder.container():
+        st.metric(label="", value=email, delta=message, help=help)
 
 

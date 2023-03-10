@@ -1,89 +1,38 @@
-import quickemailverification
-from unidecode import unidecode
-import tldextract
+import smtplib
+import dns.resolver
 
-client = quickemailverification.Client('53661396b1fc058ab009ef3da01ee6edd06d9cfc33ed9685baf446c5ef9b')
-quickemailverification = client.quickemailverification()
+addressToVerify="asdsa.asdsad@rotpunkt-pharma.ch"
 
-def emailFormats(firstName, lastName, domain):
+domain = "ruegg.ch"
+# MX record lookup
+records = dns.resolver.resolve(domain, 'MX')
+mxRecord = records[0].exchange
+mxRecord = str(mxRecord)
 
-    emails = [
+# SMTP lib setup
+server = smtplib.SMTP()
+# uncomment the below line if you want to see full output.
+# server.set_debuglevel(1)
 
-        firstName + "." + lastName + "@" + domain,      #max.muster@muster.ch
-        firstName[0] + '.' + lastName + '@' + domain,   #m.muster@muster.ch
-        firstName + "_" + lastName + "@" + domain,      #max_muster@muster.ch
-        firstName + '@' + domain,                       #max@muster.ch
+# This is just a fake email that doesn't probably exist for smtp.mail(fromAddress)
+fromAddress = 'just_a_place_holder@domain.com'
 
-        lastName + '@' + domain,                        #muster@muster.ch
-        firstName[0] + lastName + '@' + domain,         #mmuster@muster.ch
-        firstName + lastName[0] + '@' + domain,         #maxm@muster.ch
-        firstName[0] + lastName[0] + '@' + domain,      #mm@muster.ch
-        lastName + firstName[0] + '@' + domain,         #musterm@muster.ch
-        firstName + '-' + lastName + '@' + domain,      #max-muster@muster.ch
-        firstName + '.' + lastName[0] + '@' + domain    #max.m@muster.ch
-    ]
+acceptall = "invalid.email.9238381" +"@" +domain
+print(acceptall)
 
-    return emails
+# SMTP Conversation
+server.connect(mxRecord)
+server.helo(server.local_hostname)  ### server.local_hostname(Get local server hostname)
+server.mail(fromAddress)
+code, message = server.rcpt(str(acceptall))
+server.quit()
 
-def checkEmail(emails):
-
-    for email in emails:
-        response = quickemailverification.verify(email)
-        print(response.body)
-        status = response.body["safe_to_send"]
-        acceptAll = response.body["accept_all"]
-
-        print(status)
-        if status == "true":
-            print("Email found")
-            print(email)
-            break
-        if acceptAll == "true":
-            print("Accept All")
-            print(emails[0])
-            break
+print("code:", code)
+print("message:", message)
 
 
-firstName = "leonhard"
-lastName = "Ruegg"
-domain = "zutt.ch"
-
-domain = tldextract.extract(domain)
-domain = domain.domain + "." + domain.suffix
-
-firstName = firstName.lower()
-lastName = lastName.lower()
-
-umlautMode = False
-umlaute = ['ä','ü','ö']
-
-for umlaut in umlaute:
-    if umlaut in firstName:
-        umlautMode = True
-    if umlaut in lastName:
-        umlautMode = True
-
-emails = emailFormats(unidecode(firstName), unidecode(lastName), domain)
-
-quickMode = True
-
-if quickMode == True:
-    emails = emails[0:4]
-
-print(emails)
-
-if umlautMode == True:
-    vowel_char_map = {ord('ä'): 'ae', ord('ü'): 'ue', ord('ö'): 'oe'}
-    firstName = firstName.translate(vowel_char_map)
-    lastName = lastName.translate(vowel_char_map)
-    print(lastName)
-    firstName = unidecode(firstName)
-    lastName = unidecode(lastName)
-    umlautmails = emailFormats(firstName, lastName, domain)
-    if quickMode == True:
-        umlautmails = umlautmails[0:4]
-    emails.extend(umlautmails)
-    umlautMode = False
-
-print(emails)
-checkEmail(emails)
+# Assume SMTP response 250 is success
+if code == 250:
+    print('Success')
+else:
+    print('Bad')

@@ -1,14 +1,11 @@
 # pip freeze > requirements.txt
 import streamlit as st
-
 import smtplib
 import dns.resolver
 from unidecode import unidecode
 import tldextract
 
 def emailFormats(firstName, lastName, domain):
-
-    print(lastName)
 
     emails = [
         firstName + "." + lastName + "@" + domain,      #max.muster@muster.ch
@@ -44,7 +41,7 @@ def EmailVerify(emails, domain):
     server.helo(server.local_hostname)  ### server.local_hostname(Get local server hostname)
     server.mail(fromAddress)
     code, message = server.rcpt(str(acceptall))
-    print(code)
+
     emailfound = False
 
     if code == 250:
@@ -66,22 +63,18 @@ def EmailVerify(emails, domain):
         return emails[0], newmessage, str(message)
 
 
-st.write("""
-## Email Verifier 
-""")
+st.write("""## Email Verifier """)
 
 col1, col2, col3 = st.columns(3)
 with col1:
     firstName = st.text_input("First Name: ",
-                              help="Also accepts Email-Adress or First- and Lastname with space in between")
+                              help="Also accepts Email-Address or First- and Lastname with space in between")
 with col2:
     lastName = st.text_input(label="Last Name: ")
 with col3:
     domain = st.text_input("Domain: ")
 
 quickMode = st.checkbox("Quickmode", value=True)
-
-placeholder = st.empty()
 
 if st.button("Sumbit"):
 
@@ -128,7 +121,6 @@ if st.button("Sumbit"):
         umlautMode = False
 
     email, message, help = EmailVerify(emails, domain)
-    with placeholder.container():
+
+    with st.container():
         st.metric(label="", value=email, delta=message, help=help)
-
-

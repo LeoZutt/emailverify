@@ -81,7 +81,7 @@ with col3:
     domain = st.text_input("Domain: ")
 
 # Set the button and start all the functions when clicked
-if st.button("Submit"):
+if st.button("Submit", use_container_width=True, type="primary"):
 
     # Extract the domain from webaddress
     domain = tldextract.extract(domain)

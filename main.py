@@ -4,6 +4,7 @@ import smtplib
 import dns.resolver
 from unidecode import unidecode
 import tldextract
+import streamlit.components.v1 as components
 
 def emailFormats(firstName, lastName, domain):
 
@@ -80,6 +81,8 @@ with col2:
 with col3:
     domain = st.text_input("Domain: ")
 
+emailonly = st.checkbox('Email Format Only', value=False, help="Only constructs the email address without verifying it.")
+
 # Set the button and start all the functions when clicked
 if st.button("Submit", use_container_width=True, type="primary"):
 
@@ -127,8 +130,34 @@ if st.button("Submit", use_container_width=True, type="primary"):
         umlautMode = False
 
     # Verify the emails
-    email, message, help = EmailVerify(emails, domain)
+    if emailonly == False:
+        email, message, help = EmailVerify(emails, domain)
+    else:
+        email = emails[0]
+        message = "Email Format Only"
+        help = None
 
     # Display the valid email
     with st.container():
         st.metric(label="", value=email, delta=message, help=help)
+
+# Allow the enter button to be used for submit
+components.html(
+    """
+<script>
+const doc = window.parent.document;
+buttons = Array.from(doc.querySelectorAll('button[kind=primary]'));
+const submit_button = buttons.find(el => el.innerText === 'Submit');
+doc.addEventListener('keydown', function(e) {
+    switch (e.keyCode) {
+        case 13: // (13 = enter)
+            submit_button.click();
+            break;
+
+    }
+});
+</script>
+""",
+    height=0,
+    width=0,
+)

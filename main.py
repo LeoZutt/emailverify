@@ -49,7 +49,6 @@ def EmailVerify(emails, domain):
         server.helo(server.local_hostname)
         server.mail(fromAddress)
 
-
     except:
         emailfound = True
         message = "- Invalid Domain - "

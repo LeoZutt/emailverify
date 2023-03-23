@@ -95,20 +95,6 @@ if st.button("Submit", use_container_width=True, type="primary"):
 
     error = False
 
-    """
-    if len(firstName)<1:
-        st.error("First Name Missing")
-        error = True
-
-    if len(lastName)<1:
-        st.error("Last Name Missing")
-        error = True
-
-    if len(domain)<1:
-        st.error("Domain Missing")
-        error = True
-    """
-
     if error == False:
 
         # Extract the domain from webaddress

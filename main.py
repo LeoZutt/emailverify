@@ -95,6 +95,7 @@ if st.button("Submit", use_container_width=True, type="primary"):
 
     error = False
 
+    """
     if len(firstName)<1:
         st.error("First Name Missing")
         error = True
@@ -106,7 +107,7 @@ if st.button("Submit", use_container_width=True, type="primary"):
     if len(domain)<1:
         st.error("Domain Missing")
         error = True
-
+    """
 
     if error == False:
 
